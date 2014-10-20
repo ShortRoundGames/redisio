@@ -1,0 +1,1 @@
+each server requires the attribute "instance" to be added with the instances name that you want the database to be created on
