@@ -148,9 +148,11 @@ stop-writes-on-bgsave-error <%= @stopwritesonbgsaveerror %>
 # the dataset will likely be bigger if you have compressible values or keys.
 rdbcompression yes
 
+<%end%>
+
 # The filename where to dump the DB
 dbfilename dump-<%=@name%>.rdb
-<%end%>
+
 
 # The working directory.
 #
