@@ -53,13 +53,6 @@ redis_instances.each do |current_server|
       restart_command "restart redis#{server_name}"
       supports :start => true, :stop => true, :restart => true, :status => false
   	end
-  elsif job_control == 'monit'
-    service "redis#{server_name}" do	  
-      start_command "monit start redis#{server_name}"
-      stop_command "monit stop redis#{server_name}"
-      restart_command "monit restart redis#{server_name}"
-      supports :start => true, :stop => true, :restart => true, :status => true
-  	end
   else
     Chef::Log.error("Unknown job control type, no service resource created!")
   end
