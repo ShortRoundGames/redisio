@@ -23,6 +23,16 @@ include_recipe 'ulimit::default'
 redis = node['redisio']
 location = "#{redis['mirror']}/#{redis['base_name']}#{redis['version']}.#{redis['artifact_type']}"
 
+#Output the monit log file to 
+template "/etc/monit/monitrc" do
+    source 'redis.monit.conf.erb'
+    cookbook 'redisio'
+    owner 'root'
+    group 'root'
+    mode '0755'
+    only_if {redis['job_control'] == 'monit'}
+end
+
 redisio_install "redis-installation" do
   version redis['version']
   download_url location
