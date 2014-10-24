@@ -1,5 +1,5 @@
 
-check process <%= @name %> with pidfile <%= @pidfile %>"
+check process <%= @name %> with pidfile "<%= @pidfile %>"
     start program = "/etc/init.d/redis_<%= @name %> start"
     stop program = "/etc/init.d/redis_<%= @name %> stop"
     if failed host 127.0.0.1 port <%= @port %> then restart
