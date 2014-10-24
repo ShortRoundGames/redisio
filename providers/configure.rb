@@ -53,23 +53,21 @@ def configure
     #   A path
     #   nil
 
-    #if current['logfile'].nil?
-    #  log_file = nil
-    #  log_directory = nil
-    #else
-    #  if current['logfile'] == 'stdout' || current['logfile'].empty?
-    #    log_directory = nil
-    #    log_file = current['logfile']
-    #  else
-    #    log_directory = ::File.dirname(current['logfile'])
-    #    log_file      = ::File.basename(current['logfile'])
-    #    if current['syslogenabled'] == 'yes'
-    #      Chef::Log.warn("log file is set to #{current['logfile']} but syslogenabled is also set to 'yes'")
-    #    end
-    #  end
-    #end
-
-    log_file = "/tmp/" + current['name'] + "_redis.log"
+    if current['logfile'].nil?
+      log_file = nil
+      log_directory = nil
+    else
+      if current['logfile'] == 'stdout' || current['logfile'].empty?
+        log_directory = nil
+        log_file = current['logfile']
+      else
+        log_directory = ::File.dirname(current['logfile'])
+        log_file      = ::File.basename(current['logfile'])
+        if current['syslogenabled'] == 'yes'
+          Chef::Log.warn("log file is set to #{current['logfile']} but syslogenabled is also set to 'yes'")
+        end
+      end
+    end
 
     maxmemory = current['maxmemory'].to_s
     if !maxmemory.empty? && maxmemory.include?("%")
@@ -278,7 +276,7 @@ def configure
         mode '0755'
         variables({
           :name => server_name,
-          :port => current['port']
+          :port => current['port'],
           :pidfile => "#{piddir}/redis_#{server_name}.pid"
           })
         only_if {node['redisio']['job_control'] == 'monit'}
