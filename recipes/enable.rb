@@ -22,7 +22,7 @@ redis = node['redisio']
 
 instance_name = node[:opsworks][:instance][:hostname]
 
-if (redis[:jobcontrol] == 'monit')
+if (redis[:job_control] == 'monit')
     service monit do
         action :reload
     end
