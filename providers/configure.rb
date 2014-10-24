@@ -53,21 +53,23 @@ def configure
     #   A path
     #   nil
 
-    if current['logfile'].nil?
-      log_file = nil
-      log_directory = nil
-    else
-      if current['logfile'] == 'stdout' || current['logfile'].empty?
-        log_directory = nil
-        log_file = current['logfile']
-      else
-        log_directory = ::File.dirname(current['logfile'])
-        log_file      = ::File.basename(current['logfile'])
-        if current['syslogenabled'] == 'yes'
-          Chef::Log.warn("log file is set to #{current['logfile']} but syslogenabled is also set to 'yes'")
-        end
-      end
-    end
+    #if current['logfile'].nil?
+    #  log_file = nil
+    #  log_directory = nil
+    #else
+    #  if current['logfile'] == 'stdout' || current['logfile'].empty?
+    #    log_directory = nil
+    #    log_file = current['logfile']
+    #  else
+    #    log_directory = ::File.dirname(current['logfile'])
+    #    log_file      = ::File.basename(current['logfile'])
+    #    if current['syslogenabled'] == 'yes'
+    #      Chef::Log.warn("log file is set to #{current['logfile']} but syslogenabled is also set to 'yes'")
+    #    end
+    #  end
+    #end
+
+    log_file = "/tmp/" + current['name'] + "_redis.log"
 
     maxmemory = current['maxmemory'].to_s
     if !maxmemory.empty? && maxmemory.include?("%")
@@ -100,6 +102,7 @@ def configure
         shell current['shell']
         system current['systemuser']
       end
+
       #Create the redis configuration directory
       directory current['configdir'] do
         owner 'root'
@@ -108,6 +111,7 @@ def configure
         recursive true
         action :create
       end
+
       #Create the instance data directory
       directory current['datadir'] do
         owner current['user']
@@ -116,6 +120,7 @@ def configure
         recursive true
         action :create
       end
+
       #Create the pid file directory
       directory piddir do
         owner current['user']
@@ -124,6 +129,7 @@ def configure
         recursive true
         action :create
       end
+
       #Create the log directory if syslog is not being used
       if log_directory
         directory log_directory do
@@ -135,6 +141,7 @@ def configure
           only_if { log_directory }
         end
       end
+
       #Create the log file if syslog is not being used
       if log_file
         file current['logfile'] do
@@ -147,6 +154,7 @@ def configure
           only_if { !log_file.empty? && log_file != "stdout" }
         end
       end
+
       #Set proper permissions on the AOF or RDB files
       file aof_file do
         owner current['user']
@@ -155,6 +163,7 @@ def configure
         only_if { current['backuptype'] == 'aof' || current['backuptype'] == 'both' }
         only_if { ::File.exists?(aof_file) }
       end
+
       file rdb_file  do
         owner current['user']
         group current['group']
@@ -162,6 +171,7 @@ def configure
         only_if { current['backuptype'] == 'rdb' || current['backuptype'] == 'both' }
         only_if { ::File.exists?(rdb_file) }
       end
+
       #Setup the redis users descriptor limits
       user_ulimit current['user'] do
         filehandle_limit descriptors
@@ -229,10 +239,11 @@ def configure
           :includes                   => current['includes']
         })
       end
+
       #Setup init.d file
       bin_path = "/usr/local/bin"
       bin_path = ::File.join(node['redisio']['install_dir'], 'bin') if node['redisio']['install_dir']
-      template "/etc/init.d/redis#{server_name}" do
+      template "/etc/init.d/redis_#{server_name}" do
         source 'redis.init.erb'
         cookbook 'redisio'
         owner 'root'
@@ -255,9 +266,25 @@ def configure
           :required_start => node['redisio']['init.d']['required_start'].join(" "),
           :required_stop => node['redisio']['init.d']['required_stop'].join(" ")
           })
-        only_if { node['redisio']['job_control'] == 'initd' }
+        only_if { node['redisio']['job_control'] == 'initd' || node['redisio']['job_control'] == 'monit'}
       end
-      template "/etc/init/redis#{server_name}.conf" do
+
+      #Setup the monit file
+      template "/etc/monit/conf.d/redis_#{server_name}.monitrc" do
+        source 'redis.monit.monitrc.erb'
+        cookbook 'redisio'
+        owner 'root'
+        group 'root'
+        mode '0755'
+        variables({
+          :name => server_name,
+          :port => current['port']
+          :pidfile => "#{piddir}/redis_#{server_name}.pid"
+          })
+        only_if {node['redisio']['job_control'] == 'monit'}
+      end
+
+      template "/etc/init/redis_#{server_name}.conf" do
         source 'redis.upstart.conf.erb'
         cookbook 'redisio'
         owner current['user']
@@ -282,6 +309,7 @@ def configure
         })
         only_if { node['redisio']['job_control'] == 'upstart' }
       end
+
     end
   end # servers each loop
 end
