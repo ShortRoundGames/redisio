@@ -26,9 +26,22 @@ end
 def configure
   base_piddir = new_resource.base_piddir
   version_hash = RedisioHelper.version_to_hash(new_resource.version)
-
+ 
   #Setup a configuration file and init script for each configuration provided
   new_resource.servers.each do |current_instance|
+
+    instance_name = node[:opsworks][:instance][:hostname]
+    if (instance_name && instance_name != current_instance[:instance])
+        
+      file "/etc/monit/conf.d/redis_#{server_name}.monitrc" do
+        owner 'root'
+        group 'root'
+        mode '0755'
+        action :delete
+      end
+        
+      next
+    end
 
     #Retrieve the default settings hash and the current server setups settings hash.
     current_instance_hash = current_instance.to_hash

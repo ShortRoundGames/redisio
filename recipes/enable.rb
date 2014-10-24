@@ -22,12 +22,22 @@ redis = node['redisio']
 
 instance_name = node[:opsworks][:instance][:hostname]
 
-redis['servers'].each do |current_server|
-  if (!current_server["instance"] || current_server["instance"] == instance_name)
-    server_name = current_server["name"] || current_server["port"]
-    resource = resources("service[redis_#{server_name}]")
-    resource.action Array(resource.action)
-    resource.action << :start
-    resource.action << :enable
-  end
+if (redis[:jobcontrol] == 'monit')
+    service monit do
+        action :reload
+    end
+else
+    redis['servers'].each do |current_server|
+        if (!current_server["instance"] || current_server["instance"] == instance_name)
+        server_name = current_server["name"] || current_server["port"]
+        resource = resources("service[redis_#{server_name}]")
+        resource.action Array(resource.action)
+        resource.action << :start
+        resource.action << :enable
+        end
+    end
 end
+
+
+
+
