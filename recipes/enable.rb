@@ -23,17 +23,22 @@ redis = node['redisio']
 instance_name = node[:opsworks][:instance][:hostname]
 
 if (redis[:job_control] == 'monit')
-    service monit do
-        action :reload
+    # Bluepill is running, so we need to restart it
+    bash "reload monit" do
+        user "root"
+        cwd "/tmp"
+        code <<-EOS
+            monit reload
+        EOS
     end
 else
     redis['servers'].each do |current_server|
         if (!current_server["instance"] || current_server["instance"] == instance_name)
-        server_name = current_server["name"] || current_server["port"]
-        resource = resources("service[redis_#{server_name}]")
-        resource.action Array(resource.action)
-        resource.action << :start
-        resource.action << :enable
+            server_name = current_server["name"] || current_server["port"]
+            resource = resources("service[redis_#{server_name}]")
+            resource.action Array(resource.action)
+            resource.action << :start
+            resource.action << :enable
         end
     end
 end
