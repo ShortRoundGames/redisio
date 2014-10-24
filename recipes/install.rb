@@ -29,7 +29,7 @@ template "/etc/monit/monitrc" do
     cookbook 'redisio'
     owner 'root'
     group 'root'
-    mode '0755'
+    mode '0700'
     only_if {redis['job_control'] == 'monit'}
 end
 

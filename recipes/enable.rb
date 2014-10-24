@@ -23,7 +23,7 @@ redis = node['redisio']
 instance_name = node[:opsworks][:instance][:hostname]
 
 if (redis[:job_control] == 'monit')
-    # Bluepill is running, so we need to restart it
+    # Reload monit
     bash "reload monit" do
         user "root"
         cwd "/tmp"
