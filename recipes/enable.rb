@@ -25,7 +25,7 @@ instance_name = node[:opsworks][:instance][:hostname]
 # Set vm.overcommit_memory for redis
 bash "overcommit_memory" do
     user "root"
-    cwd "/tmp"
+    cwd "/"
     code <<-EOS
         sysctl vm.overcommit_memory=1
     EOS
